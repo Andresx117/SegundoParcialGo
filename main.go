@@ -13,6 +13,7 @@ func main() {
 	CanalNodo := make(chan []gestorarchivos.Nodo)
 	CanalVecino := make(chan gestorarchivos.Resultado)
 	CanalInsercion := make(chan gestorarchivos.Resultado)
+	CanalVecindario := make(chan gestorarchivos.Resultado)
 
 	var wg sync.WaitGroup
 
@@ -66,6 +67,22 @@ func main() {
 	fmt.Println(<-CanalVecino)
 	fmt.Println(<-CanalInsercion)
 
+	// Implementar la búsqueda de vecindario
+	wg.Add(1)
+	go func() {
+		rutaVecindario, distanciaTotalVecindario := busquedaVecindario(IndiceNodos)
+		fmt.Println("Ruta utilizando Búsqueda de Vecindario:", rutaVecindario)
+		fmt.Println("Distancia total utilizando Búsqueda de Vecindario:", distanciaTotalVecindario)
+		ResVecindario := gestorarchivos.CrearResultado(rutaVecindario, distanciaTotalVecindario)
+		CanalVecindario <- *ResVecindario
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	fmt.Println(<-CanalVecino)
+	fmt.Println(<-CanalInsercion)
+	fmt.Println(<-CanalVecindario)
 }
 
 //todasDistancias es un arreglo con las distancias entre distintos pares de nodos, así: [nodo Inicial, nodo Final, distancia]
