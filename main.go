@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
+
 	"sync"
-	"time"
 
 	gestorarchivos "github.com/Andresx117/SegundoParcialGo/GestorArchivos"
 	VecinoCercano "github.com/Andresx117/SegundoParcialGo/VecinoCercano"
@@ -25,9 +24,17 @@ func main() {
 
 	// Recibir los nodos del canal
 	IndiceNodos := <-CanalNodo
-	rand.Seed(time.Now().UnixNano())
-	IndiceAleatorio := rand.Intn(len(IndiceNodos))
-	fmt.Println("Nodo inicio", IndiceNodos[IndiceAleatorio].Nombre)
+
+	// Calcular la ruta óptima utilizando Vecino Más Cercano
+	wg.Add(1)
+	go func() {
+		distanciasPrim, distanciasSec := VecinoCercano.Calculo(IndiceNodos)
+		fmt.Println("Distancias calculadas por búsqueda de vecindario:", append(distanciasPrim, distanciasSec...))
+		wg.Done()
+	}()
+	//rand.Seed(time.Now().UnixNano())
+	//IndiceAleatorio := rand.Intn(len(IndiceNodos))
+	//fmt.Println("Nodo inicio", IndiceNodos[IndiceAleatorio].Nombre)
 	//distanciasPrim, distanciasSec := VecinoCercano.Calculo(IndiceNodos)
 	//todasDistancias := append(distanciasPrim, distanciasSec...)
 	//fmt.Println("Distancias calculadas:", todasDistancias)
