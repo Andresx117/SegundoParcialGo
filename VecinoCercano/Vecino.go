@@ -67,6 +67,89 @@ func VecinoMasCercano(nodos []gestorarchivos.Nodo) ([]gestorarchivos.Distancia, 
 	return ruta, totalDistancia
 }
 
+// InsercionMasCercana calcula la ruta óptima utilizando el algoritmo de inserción más cercana
+func InsercionMasCercana(nodos []gestorarchivos.Nodo) ([]gestorarchivos.Distancia, float64) {
+	if len(nodos) == 0 {
+		return nil, 0
+	}
+
+	// Empezamos con un ciclo que incluye el primer nodo
+	var ruta []gestorarchivos.Distancia
+	totalDistancia := 0.0
+
+	visitados := make(map[string]bool)
+	visitados[nodos[0].Nombre] = true
+
+	if len(nodos) > 1 {
+		visitados[nodos[1].Nombre] = true
+		ruta = append(ruta, gestorarchivos.Distancia{
+			NodoI:     nodos[0].Nombre,
+			NodoFinal: nodos[1].Nombre,
+			Distancia: distanciaEuclidiana(nodos[0], nodos[1]),
+		})
+		ruta = append(ruta, gestorarchivos.Distancia{
+			NodoI:     nodos[1].Nombre,
+			NodoFinal: nodos[0].Nombre,
+			Distancia: distanciaEuclidiana(nodos[1], nodos[0]),
+		})
+		totalDistancia = 2 * distanciaEuclidiana(nodos[0], nodos[1])
+	}
+
+	// Inserción más cercana
+	for len(visitados) < len(nodos) {
+		nodoMasCercano := gestorarchivos.Nodo{}
+		minIncremento := math.MaxFloat64
+		posicion := 0
+
+		// Encontrar el nodo no visitado más cercano y la mejor posición para insertarlo
+		for _, nodo := range nodos {
+			if !visitados[nodo.Nombre] {
+				for i := 0; i < len(ruta); i++ {
+					nodoI := encontrarNodo(ruta[i].NodoI, nodos)
+					nodoF := encontrarNodo(ruta[i].NodoFinal, nodos)
+					incremento := distanciaEuclidiana(nodoI, nodo) + distanciaEuclidiana(nodo, nodoF) - ruta[i].Distancia
+					if incremento < minIncremento {
+						nodoMasCercano = nodo
+						minIncremento = incremento
+						posicion = i
+					}
+				}
+			}
+		}
+
+		// Insertar el nodo en la posición encontrada
+		if (nodoMasCercano != gestorarchivos.Nodo{}) {
+			nodoI := encontrarNodo(ruta[posicion].NodoI, nodos)
+			nodoF := encontrarNodo(ruta[posicion].NodoFinal, nodos)
+			ruta = append(ruta[:posicion+1], ruta[posicion:]...) // Hacer espacio para la nueva distancia
+			ruta[posicion] = gestorarchivos.Distancia{
+				NodoI:     nodoI.Nombre,
+				NodoFinal: nodoMasCercano.Nombre,
+				Distancia: distanciaEuclidiana(nodoI, nodoMasCercano),
+			}
+			ruta[posicion+1] = gestorarchivos.Distancia{
+				NodoI:     nodoMasCercano.Nombre,
+				NodoFinal: nodoF.Nombre,
+				Distancia: distanciaEuclidiana(nodoMasCercano, nodoF),
+			}
+			totalDistancia += minIncremento
+			visitados[nodoMasCercano.Nombre] = true
+		}
+	}
+
+	return ruta, totalDistancia
+}
+
+// Encuentra un nodo por su nombre
+func encontrarNodo(nombre string, nodos []gestorarchivos.Nodo) gestorarchivos.Nodo {
+	for _, nodo := range nodos {
+		if nodo.Nombre == nombre {
+			return nodo
+		}
+	}
+	return gestorarchivos.Nodo{}
+}
+
 // Calcula las distancias entre los nodos en la lista dada
 func calcularDistancias(nodos []gestorarchivos.Nodo, distancias *[]gestorarchivos.Distancia, wg *sync.WaitGroup) {
 	defer wg.Done()
