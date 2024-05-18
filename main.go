@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"sync"
+	"time"
 
 	gestorarchivos "github.com/Andresx117/SegundoParcialGo/GestorArchivos"
 	VecinoCercano "github.com/Andresx117/SegundoParcialGo/VecinoCercano"
@@ -9,6 +12,7 @@ import (
 
 func main() {
 	CanalNodo := make(chan []gestorarchivos.Nodo)
+	var wg sync.WaitGroup
 
 	// Iniciar una goroutine para leer los nodos y enviarlos al canal
 	go func() {
@@ -18,19 +22,34 @@ func main() {
 
 	// Recibir los nodos del canal
 	IndiceNodos := <-CanalNodo
-	distanciasPrim, distanciasSec := VecinoCercano.Calculo(IndiceNodos)
-	todasDistancias := append(distanciasPrim, distanciasSec...)
-	fmt.Println("Distancias calculadas:", todasDistancias)
+	rand.Seed(time.Now().UnixNano())
+	IndiceAleatorio := rand.Intn(len(IndiceNodos))
+	fmt.Println("Nodo inicio", IndiceNodos[IndiceAleatorio].Nombre)
+	//distanciasPrim, distanciasSec := VecinoCercano.Calculo(IndiceNodos)
+	//todasDistancias := append(distanciasPrim, distanciasSec...)
+	//fmt.Println("Distancias calculadas:", todasDistancias)
 
 	// Calcular la ruta óptima utilizando Vecino Más Cercano
-	rutaVecinoMasCercano, distanciaTotalVecinoMasCercano := VecinoCercano.VecinoMasCercano(IndiceNodos)
-	fmt.Println("Ruta utilizando Vecino Más Cercano:", rutaVecinoMasCercano)
-	fmt.Println("Distancia total utilizando Vecino Más Cercano:", distanciaTotalVecinoMasCercano)
+	wg.Add(1)
+	go func() {
+
+		rutaVecinoMasCercano, distanciaTotalVecinoMasCercano := VecinoCercano.VecinoMasCercano(IndiceNodos)
+		fmt.Println("Ruta utilizando Vecino Más Cercano:", rutaVecinoMasCercano)
+		fmt.Println("Distancia total utilizando Vecino Más Cercano:", distanciaTotalVecinoMasCercano)
+		wg.Done()
+	}()
 
 	// Calcular la ruta óptima utilizando Inserción Más Cercana
-	rutaInsercionMasCercana, distanciaTotalInsercionMasCercana := VecinoCercano.InsercionMasCercana(IndiceNodos)
-	fmt.Println("Ruta utilizando Inserción Más Cercana:", rutaInsercionMasCercana)
-	fmt.Println("Distancia total utilizando Inserción Más Cercana:", distanciaTotalInsercionMasCercana)
+	wg.Add(1)
+	go func() {
+
+		rutaInsercionMasCercana, distanciaTotalInsercionMasCercana := VecinoCercano.InsercionMasCercana(IndiceNodos)
+		fmt.Println("Ruta utilizando Inserción Más Cercana:", rutaInsercionMasCercana)
+		fmt.Println("Distancia total utilizando Inserción Más Cercana:", distanciaTotalInsercionMasCercana)
+		wg.Done()
+	}()
+	wg.Wait()
+
 }
 
 //todasDistancias es un arreglo con las distancias entre distintos pares de nodos, así: [nodo Inicial, nodo Final, distancia]
