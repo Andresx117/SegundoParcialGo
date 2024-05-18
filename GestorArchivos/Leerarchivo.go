@@ -14,6 +14,11 @@ type Nodo struct {
 	CoorY    float64
 	Visitado bool
 }
+type Distancia struct {
+	NodoI     string
+	NodoFinal string
+	Distancia float64
+}
 
 func CrearNodos(nombre string, X, Y float64) *Nodo {
 	Cn := &Nodo{
@@ -44,7 +49,6 @@ func LeerNodos(NombreArchivo string) []Nodo {
 	for scanner.Scan() {
 		linea := scanner.Text()
 		campos := strings.Split(linea, " ")
-
 		// Convierte los valores a los tipos adecuados
 		Z := campos[0]
 		X, _ := strconv.ParseFloat(campos[1], 32)
