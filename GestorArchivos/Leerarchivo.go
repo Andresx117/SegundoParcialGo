@@ -20,6 +20,21 @@ type Distancia struct {
 	Distancia float64
 }
 
+type Resultado struct {
+	RutaR      []Distancia
+	DistanciaR float64
+}
+
+func CrearResultado(Ruta []Distancia, Distancia float64) *Resultado {
+	Cn := &Resultado{
+		RutaR:      Ruta,
+		DistanciaR: Distancia,
+	}
+
+	return Cn
+
+}
+
 func CrearNodos(nombre string, X, Y float64) *Nodo {
 	Cn := &Nodo{
 		Nombre:   nombre,

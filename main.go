@@ -12,6 +12,9 @@ import (
 
 func main() {
 	CanalNodo := make(chan []gestorarchivos.Nodo)
+	CanalVecino := make(chan gestorarchivos.Resultado)
+	CanalInsercion := make(chan gestorarchivos.Resultado)
+
 	var wg sync.WaitGroup
 
 	// Iniciar una goroutine para leer los nodos y enviarlos al canal
@@ -36,6 +39,8 @@ func main() {
 		rutaVecinoMasCercano, distanciaTotalVecinoMasCercano := VecinoCercano.VecinoMasCercano(IndiceNodos)
 		fmt.Println("Ruta utilizando Vecino Más Cercano:", rutaVecinoMasCercano)
 		fmt.Println("Distancia total utilizando Vecino Más Cercano:", distanciaTotalVecinoMasCercano)
+		Resve := gestorarchivos.CrearResultado(rutaVecinoMasCercano, distanciaTotalVecinoMasCercano)
+		CanalVecino <- *Resve
 		wg.Done()
 	}()
 
@@ -46,9 +51,13 @@ func main() {
 		rutaInsercionMasCercana, distanciaTotalInsercionMasCercana := VecinoCercano.InsercionMasCercana(IndiceNodos)
 		fmt.Println("Ruta utilizando Inserción Más Cercana:", rutaInsercionMasCercana)
 		fmt.Println("Distancia total utilizando Inserción Más Cercana:", distanciaTotalInsercionMasCercana)
+		Resin := gestorarchivos.CrearResultado(rutaInsercionMasCercana, distanciaTotalInsercionMasCercana)
+		CanalInsercion <- *Resin
 		wg.Done()
 	}()
-	wg.Wait()
+	//wg.Wait()
+	fmt.Println(<-CanalVecino)
+	fmt.Println(<-CanalInsercion)
 
 }
 
