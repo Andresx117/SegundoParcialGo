@@ -2,24 +2,22 @@ package main
 
 import (
 	"fmt"
-
 	"sync"
 
-	gestorarchivos "github.com/Andresx117/SegundoParcialGo/GestorArchivos"
+	GestorArchivos "github.com/Andresx117/SegundoParcialGo/GestorArchivos"
 	VecinoCercano "github.com/Andresx117/SegundoParcialGo/VecinoCercano"
 )
 
 func main() {
-	CanalNodo := make(chan []gestorarchivos.Nodo)
-	CanalVecino := make(chan gestorarchivos.Resultado)
-	CanalInsercion := make(chan gestorarchivos.Resultado)
-	//CanalVecindario := make(chan gestorarchivos.Resultado)
+	CanalNodo := make(chan []GestorArchivos.Nodo)
+	CanalVecino := make(chan GestorArchivos.Resultado)
+	CanalInsercion := make(chan GestorArchivos.Resultado)
 
 	var wg sync.WaitGroup
 
 	// Iniciar una goroutine para leer los nodos y enviarlos al canal
 	go func() {
-		nodos := gestorarchivos.LeerNodos("NodosSahara.tsp")
+		nodos := GestorArchivos.LeerNodos("NodosSahara.tsp")
 		CanalNodo <- nodos
 	}()
 
@@ -33,21 +31,14 @@ func main() {
 		fmt.Println("Distancias calculadas por búsqueda de vecindario:", append(distanciasPrim, distanciasSec...))
 		wg.Done()
 	}()
-	//rand.Seed(time.Now().UnixNano())
-	//IndiceAleatorio := rand.Intn(len(IndiceNodos))
-	//fmt.Println("Nodo inicio", IndiceNodos[IndiceAleatorio].Nombre)
-	//distanciasPrim, distanciasSec := VecinoCercano.Calculo(IndiceNodos)
-	//todasDistancias := append(distanciasPrim, distanciasSec...)
-	//fmt.Println("Distancias calculadas:", todasDistancias)
 
 	// Calcular la ruta óptima utilizando Vecino Más Cercano
 	wg.Add(1)
 	go func() {
-
 		rutaVecinoMasCercano, distanciaTotalVecinoMasCercano := VecinoCercano.VecinoMasCercano(IndiceNodos)
 		fmt.Println("Ruta utilizando Vecino Más Cercano:", rutaVecinoMasCercano)
 		fmt.Println("Distancia total utilizando Vecino Más Cercano:", distanciaTotalVecinoMasCercano)
-		Resve := gestorarchivos.CrearResultado(rutaVecinoMasCercano, distanciaTotalVecinoMasCercano)
+		Resve := GestorArchivos.CrearResultado(rutaVecinoMasCercano, distanciaTotalVecinoMasCercano)
 		CanalVecino <- *Resve
 		wg.Done()
 	}()
@@ -55,34 +46,20 @@ func main() {
 	// Calcular la ruta óptima utilizando Inserción Más Cercana
 	wg.Add(1)
 	go func() {
-
 		rutaInsercionMasCercana, distanciaTotalInsercionMasCercana := VecinoCercano.InsercionMasCercana(IndiceNodos)
 		fmt.Println("Ruta utilizando Inserción Más Cercana:", rutaInsercionMasCercana)
 		fmt.Println("Distancia total utilizando Inserción Más Cercana:", distanciaTotalInsercionMasCercana)
-		Resin := gestorarchivos.CrearResultado(rutaInsercionMasCercana, distanciaTotalInsercionMasCercana)
+		Resin := GestorArchivos.CrearResultado(rutaInsercionMasCercana, distanciaTotalInsercionMasCercana)
 		CanalInsercion <- *Resin
 		wg.Done()
 	}()
-	wg.Wait()
-	fmt.Println(<-CanalVecino)
-	fmt.Println(<-CanalInsercion)
 
-	// Implementar la búsqueda de vecindario
-	//wg.Add(1)
-	/*go func() {
-		rutaVecindario, distanciaTotalVecindario := busquedaVecindario(IndiceNodos)
-		fmt.Println("Ruta utilizando Búsqueda de Vecindario:", rutaVecindario)
-		fmt.Println("Distancia total utilizando Búsqueda de Vecindario:", distanciaTotalVecindario)
-		ResVecindario := gestorarchivos.CrearResultado(rutaVecindario, distanciaTotalVecindario)
-		CanalVecindario <- *ResVecindario
-		wg.Done()
-	}()*/
-
+	// Esperar a que todas las goroutines terminen
 	wg.Wait()
 
+	// Imprimir resultados recibidos de las goroutines
 	fmt.Println(<-CanalVecino)
 	fmt.Println(<-CanalInsercion)
-	//fmt.Println(<-CanalVecindario)
 }
 
 //todasDistancias es un arreglo con las distancias entre distintos pares de nodos, así: [nodo Inicial, nodo Final, distancia]
