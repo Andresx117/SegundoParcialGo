@@ -1,4 +1,4 @@
-package gestorarchivos
+package GestorArchivos
 
 import (
 	"bufio"
