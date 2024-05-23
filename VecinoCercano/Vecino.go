@@ -18,7 +18,7 @@ func distanciaEuclidiana(nodo1, nodo2 gestorarchivos.Nodo) float64 {
 }
 
 // VecinoMásCercano calcula la ruta óptima utilizando el algoritmo del vecino más cercano
-func VecinoMasCercano(nodos []gestorarchivos.Nodo, imdice int) ([]gestorarchivos.Distancia, float64) {
+func VecinoMasCercano(nodos []gestorarchivos.Nodo, indice int) ([]gestorarchivos.Distancia, float64) {
 	if len(nodos) == 0 {
 		return nil, 0
 	}
@@ -27,7 +27,7 @@ func VecinoMasCercano(nodos []gestorarchivos.Nodo, imdice int) ([]gestorarchivos
 	var ruta []gestorarchivos.Distancia
 	totalDistancia := 0.0
 
-	nodoActual := nodos[0]
+	nodoActual := nodos[indice]
 	visitados[nodoActual.Nombre] = true
 
 	for len(visitados) < len(nodos) {
@@ -59,16 +59,16 @@ func VecinoMasCercano(nodos []gestorarchivos.Nodo, imdice int) ([]gestorarchivos
 	// Regresar al nodo inicial para completar el ciclo
 	ruta = append(ruta, gestorarchivos.Distancia{
 		NodoI:     nodoActual.Nombre,
-		NodoFinal: nodos[0].Nombre,
-		Distancia: distanciaEuclidiana(nodoActual, nodos[0]),
+		NodoFinal: nodos[indice].Nombre,
+		Distancia: distanciaEuclidiana(nodoActual, nodos[indice]),
 	})
-	totalDistancia += distanciaEuclidiana(nodoActual, nodos[0])
+	totalDistancia += distanciaEuclidiana(nodoActual, nodos[indice])
 
 	return ruta, totalDistancia
 }
 
 // InsercionMasCercana calcula la ruta óptima utilizando el algoritmo de inserción más cercana
-func InsercionMasCercana(nodos []gestorarchivos.Nodo) ([]gestorarchivos.Distancia, float64) {
+func InsercionMasCercana(nodos []gestorarchivos.Nodo, indice int) ([]gestorarchivos.Distancia, float64) {
 	if len(nodos) == 0 {
 		return nil, 0
 	}
@@ -78,21 +78,21 @@ func InsercionMasCercana(nodos []gestorarchivos.Nodo) ([]gestorarchivos.Distanci
 	totalDistancia := 0.0
 
 	visitados := make(map[string]bool)
-	visitados[nodos[0].Nombre] = true
+	visitados[nodos[indice].Nombre] = true
 
 	if len(nodos) > 1 {
-		visitados[nodos[1].Nombre] = true
+		visitados[nodos[indice+1].Nombre] = true
 		ruta = append(ruta, gestorarchivos.Distancia{
-			NodoI:     nodos[0].Nombre,
-			NodoFinal: nodos[1].Nombre,
-			Distancia: distanciaEuclidiana(nodos[0], nodos[1]),
+			NodoI:     nodos[indice].Nombre,
+			NodoFinal: nodos[indice+1].Nombre,
+			Distancia: distanciaEuclidiana(nodos[indice], nodos[indice+1]),
 		})
 		ruta = append(ruta, gestorarchivos.Distancia{
-			NodoI:     nodos[1].Nombre,
-			NodoFinal: nodos[0].Nombre,
-			Distancia: distanciaEuclidiana(nodos[1], nodos[0]),
+			NodoI:     nodos[indice+1].Nombre,
+			NodoFinal: nodos[indice].Nombre,
+			Distancia: distanciaEuclidiana(nodos[indice+1], nodos[indice]),
 		})
-		totalDistancia = 2 * distanciaEuclidiana(nodos[0], nodos[1])
+		totalDistancia = 2 * distanciaEuclidiana(nodos[indice], nodos[indice+1])
 	}
 
 	// Inserción más cercana
@@ -187,68 +187,74 @@ func Calculo(IndiceNodos []gestorarchivos.Nodo) ([]gestorarchivos.Distancia, []g
 
 }
 
-/*func busquedaVecindario(nodos []gestorarchivos.Nodo) ([]gestorarchivos.Distancia, float64) {
-	// Inicializar la ruta como una permutación de los nodos
-	ruta := make([]gestorarchivos.Nodo, len(nodos))
-	copy(ruta, nodos)
+func DistanciaEuclidianaVecindario(x1, y1, x2, y2 float64) float64 {
+	return math.Sqrt(math.Pow(x2-x1, 2) + math.Pow(y2-y1, 2))
+}
 
-	// Calcular la distancia total inicial
-	distanciaTotal := calcularDistanciaTotal(ruta)
+// Función auxiliar para calcular la distancia total de una ruta
+func CalcularDistanciaTotal(ruta []gestorarchivos.Distancia) float64 {
+	total := 0.0
+	for _, distancia := range ruta {
+		total += distancia.Distancia
+	}
+	return total
+}
 
-	// Variable para indicar si se realizó un intercambio en la iteración anterior
-	intercambio := true
+// Función para encontrar las coordenadas de un nodo en el slice
+func EncontrarCoordenadas(nombre string, nodos []gestorarchivos.Nodo) (float64, float64) {
+	for _, nodo := range nodos {
+		if nodo.Nombre == nombre {
+			return nodo.CoorX, nodo.CoorY
+		}
+	}
+	return 0, 0
+}
 
-	// Realizar iteraciones hasta que no se realice ningún intercambio en una iteración completa
-	for intercambio {
-		intercambio = false
-		for i := 0; i < len(ruta)-1; i++ {
-			for j := i + 1; j < len(ruta); j++ {
-				// Aplicar el intercambio
-				ruta[i], ruta[j] = ruta[j], ruta[i]
+// Función para aplicar el método de vecindario
+func AplicarVecindario(resultado gestorarchivos.Resultado, nodos []gestorarchivos.Nodo) float64 {
+	ruta := resultado.RutaR
+	mejorRuta := ruta
+	mejorDistancia := resultado.DistanciaR
 
-				// Calcular la nueva distancia total
-				nuevaDistancia := calcularDistanciaTotal(ruta)
+	for i := 0; i < len(ruta)-1; i++ {
+		for j := i + 1; j < len(ruta); j++ {
+			// Crear una nueva ruta intercambiando los nodos
+			nuevaRuta := make([]gestorarchivos.Distancia, len(ruta))
+			copy(nuevaRuta, ruta)
+			nuevaRuta[i], nuevaRuta[j] = nuevaRuta[j], nuevaRuta[i]
 
-				// Si la nueva distancia es menor, se acepta el intercambio
-				if nuevaDistancia < distanciaTotal {
-					distanciaTotal = nuevaDistancia
-					intercambio = true
-				} else {
-					// Si no es menor, se deshace el intercambio
-					ruta[i], ruta[j] = ruta[j], ruta[i]
-				}
+			// Recalcular las distancias para los nodos intercambiados
+			if i > 0 {
+				x1, y1 := EncontrarCoordenadas(nuevaRuta[i-1].NodoI, nodos)
+				x2, y2 := EncontrarCoordenadas(nuevaRuta[i-1].NodoFinal, nodos)
+				nuevaRuta[i-1].Distancia = DistanciaEuclidianaVecindario(x1, y1, x2, y2)
+			}
+			x1, y1 := EncontrarCoordenadas(nuevaRuta[i].NodoI, nodos)
+			x2, y2 := EncontrarCoordenadas(nuevaRuta[i].NodoFinal, nodos)
+			nuevaRuta[i].Distancia = DistanciaEuclidianaVecindario(x1, y1, x2, y2)
+			if i < len(ruta)-1 {
+				x1, y1 := EncontrarCoordenadas(nuevaRuta[i+1].NodoI, nodos)
+				x2, y2 := EncontrarCoordenadas(nuevaRuta[i+1].NodoFinal, nodos)
+				nuevaRuta[i+1].Distancia = DistanciaEuclidianaVecindario(x1, y1, x2, y2)
+			}
+			x1, y1 = EncontrarCoordenadas(nuevaRuta[j].NodoI, nodos)
+			x2, y2 = EncontrarCoordenadas(nuevaRuta[j].NodoFinal, nodos)
+			nuevaRuta[j].Distancia = DistanciaEuclidianaVecindario(x1, y1, x2, y2)
+			if j < len(ruta)-1 {
+				x1, y1 := EncontrarCoordenadas(nuevaRuta[j+1].NodoI, nodos)
+				x2, y2 := EncontrarCoordenadas(nuevaRuta[j+1].NodoFinal, nodos)
+				nuevaRuta[j+1].Distancia = DistanciaEuclidianaVecindario(x1, y1, x2, y2)
+			}
+
+			nuevaDistancia := CalcularDistanciaTotal(nuevaRuta)
+			if nuevaDistancia < mejorDistancia {
+				mejorRuta = nuevaRuta
+				mejorDistancia = nuevaDistancia
 			}
 		}
 	}
 
-	// Construir la lista de distancias basada en la ruta final
-	var distancias []gestorarchivos.Distancia
-	for i := 0; i < len(ruta)-1; i++ {
-		distancia := gestorarchivos.Distancia{
-			NodoI:     ruta[i].Nombre,
-			NodoFinal: ruta[i+1].Nombre,
-			Distancia: distanciaEuclidiana(ruta[i], ruta[i+1]),
-		}
-		distancias = append(distancias, distancia)
-	}
-
-	// Agregar la distancia desde el último nodo hasta el primero para cerrar el ciclo
-	distanciaFinal := gestorarchivos.Distancia{
-		NodoI:     ruta[len(ruta)-1].Nombre,
-		NodoFinal: ruta[0].Nombre,
-		Distancia: distanciaEuclidiana(ruta[len(ruta)-1], ruta[0]),
-	}
-	distancias = append(distancias, distanciaFinal)
-
-	return distancias, distanciaTotal
-}*/
-
-/*func calcularDistanciaTotal(ruta []gestorarchivos.Nodo) float64 {
-	distanciaTotal := 0.0
-	for i := 0; i < len(ruta)-1; i++ {
-		distanciaTotal += distanciaEuclidiana(ruta[i], ruta[i+1])
-	}
-	// Agregar la distancia desde el último nodo hasta el primero para cerrar el ciclo
-	distanciaTotal += distanciaEuclidiana(ruta[len(ruta)-1], ruta[0])
-	return distanciaTotal
-}*/
+	resultado.RutaR = mejorRuta
+	resultado.DistanciaR = mejorDistancia
+	return resultado.DistanciaR
+}
