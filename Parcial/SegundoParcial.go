@@ -8,7 +8,7 @@ import (
 	VecinoCercano "github.com/Andresx117/SegundoParcialGo/VecinoCercano"
 )
 
-func main() {
+func Parcial() {
 	CanalNodo := make(chan []gestorarchivos.Nodo)
 	CanalVecino := make(chan gestorarchivos.Resultado)
 	CanalInsercion := make(chan gestorarchivos.Resultado)
